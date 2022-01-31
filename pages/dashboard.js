@@ -642,18 +642,12 @@ export default function Dashboard() {
                     </InputGroup>
                     <Button mt={4} bgColor="blackAlpha.900" color="#fff" p={7} borderRadius="15">Send Money</Button>
                 </Flex>
-
-            
-       
-                                   
-                            
-            
-                
+          
             </Flex>
             
         )
     } 
-        return (
+    return (
             <Flex
                 h={[null,null,"100vh"]}
                 flexDir={["column", "column", "row"]}
@@ -662,7 +656,7 @@ export default function Dashboard() {
 
             >
                 <Flex
-                      w={["100%","100%","10%","15%","15%",]}
+                    w={["100%","100%","10%","15%","15%",]}
                     flexDir="column"
                     alignItems="center"
                     backgroundColor="#001013"
