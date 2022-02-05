@@ -129,6 +129,7 @@ export default function Dashboard() {
          
          
     }
+    //connect
     function connect() {
         if (persistentLogin !== null) {
             setUserAccount(persistentLogin)
