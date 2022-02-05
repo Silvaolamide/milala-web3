@@ -28,7 +28,7 @@ import {
     ModalCloseButton,
     useDisclosure,
 } from '@chakra-ui/react'
-import { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import {
     FiHome,
     FiPieChart,
@@ -45,18 +45,116 @@ import {
 } from "react-icons/fi"
 import MyChart from '../components/Mychart'
 import { ReactNode } from 'react';
+import Web3 from 'web3';
+// import { ethers } from 'ethers';
 
 import InchModal from "../components/InchModal";
 
-
+// console.log(Web3.givenProvider)
 
 
 export default function Dashboard() {
     const [display, changeDisplay] = useState("hide");
     const [swap, swapChange] = useState("fromto");
+    const [value, setValue] = useState(1);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+    const [defaultAccount, setDefaultAccount] = useState(null);
+    const [userBalance, setUserBalance] = useState(null);
+    const [userAccount, setUserAccount] = useState(null);
+    const [userChain, setUserChain] = useState(null);
+    const [persistentLogin, setPersistentLogin] = useState(null);
     
-    if(isAuthenticated){
+    let chainId
+
+    useEffect(() => {
+        // const web3 = new Web3
+        let provider = window.ethereum;
+        if (typeof provider !== 'undefined') {
+            provider.request({ method: 'eth_requestAccounts' }).then(accounts => {
+             
+                setUserAccount(accounts)
+                setPersistentLogin(accounts)
+                // Web3.eth.getChainId().then(console.log);
+                // console.log(accounts)
+                accountChangedHandler(accounts[0]);
+                getChainID();
+                
+            }).catch(err => {
+                console.log(err);
+                if (err.code === -32603) {
+                    window.location.reload()
+                } else if (err.code === 4001) {
+                    alert("User rejected the request. Please connect your wallet to continue")
+                }
+            });
+        } else {
+            alert('Please install Metamask')
+        }
+
+        window.ethereum.on('accountsChanged', accountChangedHandler);
+        window.ethereum.on('chainChanged', chainChangedHandler)
+    }, []);
+
+    const accountChangedHandler = (newAccount) => {
+        setDefaultAccount(newAccount);
+        getUserBalance(newAccount.toString());
+    }
+    const getUserBalance = (address) => {
+        window.ethereum.request({ method: 'eth_getBalance', params: [address, 'latest'] }).then(balance => {
+            setUserBalance(Web3.utils.fromWei(balance, 'ether'))    
+        }).catch(err => {
+            console.log(err);
+            if (err.code === -32603) {
+                window.location.reload()
+            }
+        });
+    }
+    const chainChangedHandler = () => {
+        window.location.reload()
+        // Web3.eth.getChainId().then(console.log);
+    }
+
+    // useEffect(() => {
+    //     window.location.reload()
+    // }, [userAccount]);
+    async function getChainID() {
+         chainId = await ethereum.request({ method: 'eth_chainId' }).then(chainSymbol => {
+             if (chainSymbol == 0x38) {
+                setUserChain('BNB')
+             }else if(chainSymbol == 0x1){ 
+                setUserChain('ETH')
+             }
+         });
+         
+         
+    }
+    function connect() {
+        if (persistentLogin !== null) {
+            setUserAccount(persistentLogin)
+            accountChangedHandler(persistentLogin);
+            getChainID();
+        } else {
+            ethereum
+                .request({ method: 'eth_requestAccounts' })
+                .then(accountChangedHandler)
+                .catch((error) => {
+                    if (error.code === 4001) {
+                        // EIP-1193 userRejectedRequest error
+                        alert('User rejected the action. Please connect your wallet to continue');
+                    } else if (error.code === -32002) {
+                        alert('Complete connection from Metamask window');
+                    } else {
+                        console.error(error);
+                    }
+                });
+        }
+    }
+    function disconnect() {
+        setUserAccount(null)
+      }
+    // cosnsole.log(chainId, userAccount)
+    if(userAccount !== null){
         return (
             <Flex
                 h={[null,null,"100vh"]}
@@ -156,7 +254,7 @@ export default function Dashboard() {
                 >
                     <Heading fontWeight="normal">Welcome back,, <Flex fontWeight="bold" display="inline-flex">Ola Silva A.</Flex></Heading>
                     <Text color="gray" fontSize="sm">nativeTokenValue</Text>
-                    <Text fontWeight="bold" fontSize="2xl">balance.formatted</Text>
+                    <Text fontWeight="bold" fontSize="2xl">{userBalance} {userChain}</Text>
                     <MyChart />
                     <Flex justifyContent="space-between" mt={8}>
                         <Flex align="flex-end">
@@ -265,9 +363,9 @@ export default function Dashboard() {
                             fontSize="sm"
                             letterSpacing="wide"
                             fontWeight="bold"
-                            onClick={() => logout()}
+                            onClick={() => disconnect()}
                         >
-                            {user.get("ethAddress")}
+                            {defaultAccount}
                         </Button>
                          
                     
@@ -291,7 +389,7 @@ export default function Dashboard() {
                                 <Flex justify="space-between" w="100%" align="flex-start">
                                     <Flex flexDir="column">
                                         <Text color="gray.400">Current Balance</Text>
-                                        <Text fontWeight="bold" fontSize="xl">balance.formatted</Text>
+                                        <Text fontWeight="bold" fontSize="xl">{userBalance} {userChain}</Text>
                                     </Flex>
                                     <Flex align="center">
                                         <Icon mr={2} as={FiCreditCard} />
@@ -890,7 +988,8 @@ export default function Dashboard() {
                             py="6"
                             fontSize="sm"
                             letterSpacing="wide"
-                            fontWeight="bold"
+                        fontWeight="bold"
+                            onClick={() => connect()}
                             // isLoading={isAuthenticating} onClick={() => authenticate()}
                         >
                             Connect Wallet
