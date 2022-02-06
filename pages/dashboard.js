@@ -46,11 +46,13 @@ import {
 import MyChart from '../components/Mychart'
 import { ReactNode } from 'react';
 import Web3 from 'web3';
+
+
 // import { ethers } from 'ethers';
 
 import InchModal from "../components/InchModal";
 
-// console.log(Web3.givenProvider)
+// console.log(data)
 
 
 export default function Dashboard() {
@@ -63,12 +65,26 @@ export default function Dashboard() {
     const [userBalance, setUserBalance] = useState(null);
     const [userAccount, setUserAccount] = useState(null);
     const [userChain, setUserChain] = useState(null);
+    const [userChainId, setUserChainId] = useState(null);
+    const [userNetworkName, setUserNetworkName] = useState(null);
     const [persistentLogin, setPersistentLogin] = useState(null);
-    
+    const [data, setData] = useState(null)
+    const [isLoading, setLoading] = useState(false)
+
     let chainId
 
     useEffect(() => {
         // const web3 = new Web3
+        setLoading(true)
+        fetch('https://api.pancakeswap.info/api/v2/tokens/0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c')
+          .then((res) => res.json())
+          .then((data) => {
+            setData(data)
+              setLoading(false)
+                
+          })
+          
+        
         let provider = window.ethereum;
         if (typeof provider !== 'undefined') {
             provider.request({ method: 'eth_requestAccounts' }).then(accounts => {
@@ -120,11 +136,14 @@ export default function Dashboard() {
     // }, [userAccount]);
     async function getChainID() {
          chainId = await ethereum.request({ method: 'eth_chainId' }).then(chainSymbol => {
-             if (chainSymbol == 0x38) {
-                setUserChain('BNB')
+             if (chainSymbol == 0x38 || chainSymbol == 0x56) {
+                 setUserChain('BNB')
+                 setUserNetworkName('Binance Smart Chain')
              }else if(chainSymbol == 0x1){ 
-                setUserChain('ETH')
+                 setUserChain('ETH')
+                 setUserNetworkName('Ethereum')
              }
+             setUserChainId(chainSymbol)
          });
          
          
@@ -210,7 +229,7 @@ export default function Dashboard() {
                                         <Icon   as={FiDroplet} fontSize="2xl" className="active-icon" />
                                     </Link>
                                     <Link _hover={{textDecor: 'none'}} display={["flex", "flex", "none", "flex", "flex"]}>
-                                        <Text className="active">Dashboard</Text>
+                                        <Text className="active">Dashboard </Text>
 
                                     </Link>
                                 </Flex>
@@ -254,7 +273,7 @@ export default function Dashboard() {
                     minH="100vh"
                 >
                     <Heading fontWeight="normal">Welcome back,, <Flex fontWeight="bold" display="inline-flex">Ola Silva A.</Flex></Heading>
-                    <Text color="gray" fontSize="sm">nativeTokenValue</Text>
+                    <Text color="gray" fontSize="sm">{isLoading? "Loading": "$"+(data?.data?.price  * userBalance).toFixed(2)}</Text>
                     <Text fontWeight="bold" fontSize="2xl">{userBalance} {userChain}</Text>
                     <MyChart />
                     <Flex justifyContent="space-between" mt={8}>
@@ -397,16 +416,16 @@ export default function Dashboard() {
                                         <Text>Mila.</Text>
                                     </Flex>
                                 </Flex>
-                                <Text mb={4}>nativeTokenValue</Text>
+                                <Text mb={4}>{isLoading? "Loading": "$"+(data?.data?.price  * userBalance).toFixed(2)}</Text>
                                 <Flex align="flex-end" justify="space-between">
                                     <Flex>
                                         <Flex flexDir="column" mr={4}>
-                                            <Text textTransform="uppercase" fontSize="xs">Valid Thru</Text>
-                                            <Text fontSize="lg">12/23</Text>
+                                            <Text textTransform="uppercase" color="#D8ABD8" fontSize="xs">Chain ID</Text>
+                                            <Text fontSize="sm"  fontWeight="semibold">{userChainId}</Text>
                                         </Flex>
                                         <Flex flexDir="column">
-                                            <Text textTransform="uppercase" fontSize="xs">CW</Text>
-                                            <Text fontSize="lg">***</Text>
+                                            <Text textTransform="uppercase" fontSize="xs" color="#D8ABD8">Network Name</Text>
+                                            <Text fontSize="sm" fontWeight="semibold">{userNetworkName}</Text>
                                         </Flex>
                                     </Flex>
                                     <Icon as={FiCreditCard} />
