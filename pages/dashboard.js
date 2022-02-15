@@ -58,9 +58,9 @@ import InchModal from "../components/InchModal";
 export default function Dashboard() {
     const [display, changeDisplay] = useState("hide");
     const [swap, swapChange] = useState("fromto");
-    const [value, setValue] = useState(1);
+    // const [value, setValue] = useState(1);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
-
+    const [value, changeValue] = useState(1);
     const [defaultAccount, setDefaultAccount] = useState(null);
     const [userBalance, setUserBalance] = useState(null);
     const [userAccount, setUserAccount] = useState(null);
@@ -70,6 +70,12 @@ export default function Dashboard() {
     const [persistentLogin, setPersistentLogin] = useState(null);
     const [data, setData] = useState(null)
     const [isLoading, setLoading] = useState(false)
+    const [busdData, setBusdData] = useState(null)
+    const [dripData, setDripData] = useState(null)
+    const [busdBal, setBusdBal] = useState(null)
+    const [dripBal, setDripBal] = useState(null)
+    const [busdIsLoading, setBusdLoading] = useState(false)
+    const [dripIsLoading, setDripLoading] = useState(false)
 
     let chainId
 
@@ -82,7 +88,21 @@ export default function Dashboard() {
             setData(data)
               setLoading(false)
                 
+        })
+        fetch('https://api.pancakeswap.info/api/v2/tokens/0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56')
+          .then((res) => res.json())
+          .then((data) => {
+            setBusdData(data?.data?.price)
+              setBusdLoading(false)
+        console.log(data?.data?.price)
           })
+        fetch('https://api.pancakeswap.info/api/v2/tokens/0x20f663cea80face82acdfa3aae6862d246ce0333')
+          .then((res) => res.json())
+          .then((data) => {
+            setDripData(data?.data?.price)
+              setDripLoading(false)
+        console.log(data?.data?.price)
+        })
           
         
         let provider = window.ethereum;
@@ -96,6 +116,44 @@ export default function Dashboard() {
                 accountChangedHandler(accounts[0]);
                 getChainID();
                 
+
+                                
+                        const busdAddress = "0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56";
+                        const holderAddress = "0x8894e0a0c962cb723c1976a4421c95949be2d4e3";
+                        const dripHolderAddress = "0x20f663cea80face82acdfa3aae6862d246ce0333";
+                
+
+                        // just the `balanceOf()` is sufficient in this case
+                        const abiJson = [
+                            {"constant":true,"inputs":[{"name":"who","type":"address"}],"name":"balanceOf","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},
+                        ];
+
+                        const contract = new web3.eth.Contract(abiJson, busdAddress);
+                        const balance = contract.methods.balanceOf(accounts[0]).call()
+                            .then(busdBalance => {
+                                const calcBusdBal = (busdBalance/(10 ** 18))
+                                console.log("addressBalance", calcBusdBal);
+                                setBusdBal(calcBusdBal)
+                            }).catch(
+                                err => {
+                                    console.log("network error", err)
+                                }
+                            );
+                        const contract2 = new web3.eth.Contract(abiJson, dripHolderAddress);
+                        const balance2 = contract2.methods.balanceOf(accounts[0]).call()
+                            .then(dripBalance => {
+                                const calcDripBal = (dripBalance/(10 ** 18))
+                                console.log("dripBalance", calcDripBal);
+                                setDripBal(calcDripBal)
+                            }).catch(
+                                err => {
+                                    console.log("network error", err)
+                                }
+                            );
+                        // const balance = await contract.methods.balanceOf(defaultAccount).call();
+                        // note that this number includes the decimal places (in case of BUSD, that's 18 decimal places)
+                        
+       
             }).catch(err => {
                 console.log(err);
                 if (err.code === -32603) {
@@ -110,6 +168,29 @@ export default function Dashboard() {
 
         window.ethereum.on('accountsChanged', accountChangedHandler);
         window.ethereum.on('chainChanged', chainChangedHandler)
+
+        const web3 = new Web3(provider);
+
+        //{  although I already have the chainID/NetworkId from Metamask, I just used this block of code
+        //to begin testing of web3 }
+
+        //Metamask however gives a warning of Deprecation on Console.log
+        //Block to get Id of Network connected to.        
+        const networkId = web3.eth.net.getId().then(netId => {
+            console.log("network", netId)
+        }).catch(
+            err => {
+                console.log("network error", err)
+            }
+        );
+        // console.log("network", networkId);
+
+
+        // to get token balance
+        // const tokBal = web3.eth.getBalance(defaultAccount)
+        // console.log(tokBal)
+        // console.log(defaultAccount)
+
     }, []);
 
     const accountChangedHandler = (newAccount) => {
@@ -135,6 +216,7 @@ export default function Dashboard() {
     //     window.location.reload()
     // }, [userAccount]);
     async function getChainID() {
+
          chainId = await ethereum.request({ method: 'eth_chainId' }).then(chainSymbol => {
              if (chainSymbol == 0x38 || chainSymbol == 0x56) {
                  setUserChain('BNB')
@@ -416,7 +498,7 @@ export default function Dashboard() {
                                         <Text>Mila.</Text>
                                     </Flex>
                                 </Flex>
-                                <Text mb={4}>{isLoading? "Loading": "$"+(data?.data?.price  * userBalance).toFixed(2)}</Text>
+                                <Text mb={4}>{isLoading? "Loading": "$"+(data?.data?.price  * userBalance).toFixed(2)} - [{((data?.data?.price)*1).toFixed(2)}]</Text>
                                 <Flex align="flex-end" justify="space-between">
                                     <Flex>
                                         <Flex flexDir="column" mr={4}>
@@ -439,30 +521,31 @@ export default function Dashboard() {
                                 mt={4}
                                 w="100%"
                                 h="200px"
-                                bgGradient="linear(to-t, yellow.300, blue.500)"
+                                bgGradient="linear(to-t, #1f306e, #f5487f)"
                                 
                             >
                             <Flex p="1em" color="#fff" flexDir="column" h="100%" justify="space-between" >
                                 <Flex justify="space-between" w="100%" align="flex-start">
                                     <Flex flexDir="column">
-                                        <Text color="gray.400">Current Balance</Text>
-                                        <Text fontWeight="bold" fontSize="xl">$15,250.20</Text>
+                                        <Text color="#CDFFF9">Current BUSD Balance</Text>
+                                        <Text fontWeight="bold" fontSize="xl">{busdBal}</Text>
                                     </Flex>
                                     <Flex align="center">
                                         <Icon mr={2} as={FiCreditCard} />
                                         <Text>Mila.</Text>
                                     </Flex>
                                 </Flex>
-                                <Text mb={4}>**** **** **** 1289</Text>
+                                {/* <Text mb={4}>{busdIsLoading? "Loading": "$"+(busdData?.busdData?.price  * userBalance).toFixed(2)}</Text> */}
+                                <Text mb={4}>{busdIsLoading? "Loading": "$"+parseFloat(busdData)}</Text>
                                 <Flex align="flex-end" justify="space-between">
                                     <Flex>
                                         <Flex flexDir="column" mr={4}>
-                                            <Text textTransform="uppercase" fontSize="xs">Valid Thru</Text>
-                                            <Text fontSize="lg">12/23</Text>
+                                            <Text textTransform="uppercase" color="#CDFFF9" fontSize="xs">Chain ID</Text>
+                                            <Text fontSize="sm"  fontWeight="semibold">{userChainId}</Text>
                                         </Flex>
                                         <Flex flexDir="column">
-                                            <Text textTransform="uppercase" fontSize="xs">CW</Text>
-                                            <Text fontSize="lg">***</Text>
+                                            <Text textTransform="uppercase" fontSize="xs" color="#CDFFF9">Network Name</Text>
+                                            <Text fontSize="sm" fontWeight="semibold">{userNetworkName}</Text>
                                         </Flex>
                                     </Flex>
                                     <Icon as={FiCreditCard} />
@@ -483,20 +566,21 @@ export default function Dashboard() {
                             <Flex p="1em" color="#fff" flexDir="column" h="100%" justify="space-between" >
                                 <Flex justify="space-between" w="100%" align="flex-start">
                                     <Flex flexDir="column">
-                                        <Text color="gray.400">Current Balance</Text>
-                                        <Text fontWeight="bold" fontSize="xl">$9,950.20</Text>
+                                        <Text color="gray.400">Current Drip Balance</Text>
+                                        <Text fontWeight="bold" fontSize="xl">{dripBal} Drip</Text>
+                                        
                                     </Flex>
                                     <Flex align="center">
                                         <Icon mr={2} as={FiCreditCard} />
                                         <Text>Mila.</Text>
                                     </Flex>
                                 </Flex>
-                                <Text mb={4}>**** **** **** 1289</Text>
+                                <Text mb={4}>{dripIsLoading? "Loading": "$"+parseFloat(dripData)*dripBal}</Text>
                                 <Flex align="flex-end" justify="space-between">
                                     <Flex>
                                         <Flex flexDir="column" mr={4}>
-                                            <Text textTransform="uppercase" fontSize="xs">Valid Thru</Text>
-                                            <Text fontSize="lg">12/23</Text>
+                                            <Text textTransform="uppercase" fontSize="xs">Drip Price</Text>
+                                            <Text fontSize="lg">{dripIsLoading? "Loading": "$"+parseFloat(dripData)}</Text>
                                         </Flex>
                                         <Flex flexDir="column">
                                             <Text textTransform="uppercase" fontSize="xs">CW</Text>
