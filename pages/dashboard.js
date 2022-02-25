@@ -44,8 +44,12 @@ import {
     FiDroplet
 } from "react-icons/fi"
 import MyChart from '../components/Mychart'
+import { Line, Chart } from 'react-chartjs-2'
 import { ReactNode } from 'react';
 import Web3 from 'web3';
+import axios from 'axios';
+let empTime = [];
+let empValue = [];
 
 
 // import { ethers } from 'ethers';
@@ -77,34 +81,29 @@ export default function Dashboard() {
     const [busdIsLoading, setBusdLoading] = useState(false)
     const [dripIsLoading, setDripLoading] = useState(false)
 
+    const [chrtState, setChrtState] = useState({
+        loading: true,
+        drip: null,
+      });
+    const [chartData, setChartData] = useState([]);
+    const [chartData2, setChartData2] = useState([]);
+    const [chartData3, setChartData3] = useState([]);
+    const [employeeSalary, setEmployeeSalary] = useState([]);
+    const [employeeAge, setEmployeeAge] = useState([]);
+
+    //I want to hide the dex ui for now
+    const [dexTuggle, setDexTuggle] = useState(false)
+
     let chainId
+  
+    
+// console.log("Jehhhh5", empValue)
+
 
     useEffect(() => {
-        // const web3 = new Web3
-        setLoading(true)
-        fetch('https://api.pancakeswap.info/api/v2/tokens/0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c')
-          .then((res) => res.json())
-          .then((data) => {
-            setData(data)
-              setLoading(false)
-                
-        })
-        fetch('https://api.pancakeswap.info/api/v2/tokens/0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56')
-          .then((res) => res.json())
-          .then((data) => {
-            setBusdData(data?.data?.price)
-              setBusdLoading(false)
-        console.log(data?.data?.price)
-          })
-        fetch('https://api.pancakeswap.info/api/v2/tokens/0x20f663cea80face82acdfa3aae6862d246ce0333')
-          .then((res) => res.json())
-          .then((data) => {
-            setDripData(data?.data?.price)
-              setDripLoading(false)
-        console.log(data?.data?.price)
-        })
-          
         
+        
+
         let provider = window.ethereum;
         if (typeof provider !== 'undefined') {
             provider.request({ method: 'eth_requestAccounts' }).then(accounts => {
@@ -114,9 +113,13 @@ export default function Dashboard() {
                 // Web3.eth.getChainId().then(console.log);
                 // console.log(accounts)
                 accountChangedHandler(accounts[0]);
+                // getUserBalance(accounts[0].toString());
                 getChainID();
                 
-
+                // Maybe I should make this repeat every 15 secs
+                    // const interval = setInterval(() => {
+                        
+                    
                                 
                         const busdAddress = "0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56";
                         const holderAddress = "0x8894e0a0c962cb723c1976a4421c95949be2d4e3";
@@ -152,7 +155,8 @@ export default function Dashboard() {
                             );
                         // const balance = await contract.methods.balanceOf(defaultAccount).call();
                         // note that this number includes the decimal places (in case of BUSD, that's 18 decimal places)
-                        
+                    // }, 10000);
+                    // return () => clearInterval(interval); 
        
             }).catch(err => {
                 console.log(err);
@@ -169,6 +173,41 @@ export default function Dashboard() {
         window.ethereum.on('accountsChanged', accountChangedHandler);
         window.ethereum.on('chainChanged', chainChangedHandler)
 
+
+        
+        
+        // //tried to get bnb current price from pancakeswap api
+        // const web3 = new Web3
+        setLoading(true)
+        fetch('https://api.pancakeswap.info/api/v2/tokens/0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c')
+          .then((res) => res.json())
+          .then((data) => {
+            // setData(data)
+            //   setLoading(false)
+                
+        })
+        fetch('https://api.pancakeswap.info/api/v2/tokens/0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56')
+          .then((res) => res.json())
+          .then((data) => {
+            setBusdData(data?.data?.price)
+              setBusdLoading(false)
+        console.log(data?.data?.price)
+          })
+        
+        ////Tried to get Drip data from Coingecko
+          // fetch('https://api.coingecko.com/api/v3/simple/price?ids=drip-network&vs_currencies=usd')
+        // // https://api.drip.community/prices/
+        //   .then((res) => res.json())
+        //     .then((data) => {
+        //         setDripData(data["drip-network"]["usd"])
+        //         setDripLoading(false)
+        //         console.log("drip", data["drip-network"]["usd"])
+        // })
+        
+        
+
+        
+        
         const web3 = new Web3(provider);
 
         //{  although I already have the chainID/NetworkId from Metamask, I just used this block of code
@@ -185,14 +224,77 @@ export default function Dashboard() {
         );
         // console.log("network", networkId);
 
+        setLoading(true)
+        
+        //get price from oracle... chainlink is the most popular of them all
+        const aggregatorV3InterfaceABI = [{"inputs":[],"name":"decimals","outputs":[{"internalType":"uint8","name":"","type":"uint8"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"description","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint80","name":"_roundId","type":"uint80"}],"name":"getRoundData","outputs":[{"internalType":"uint80","name":"roundId","type":"uint80"},{"internalType":"int256","name":"answer","type":"int256"},{"internalType":"uint256","name":"startedAt","type":"uint256"},{"internalType":"uint256","name":"updatedAt","type":"uint256"},{"internalType":"uint80","name":"answeredInRound","type":"uint80"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"latestRoundData","outputs":[{"internalType":"uint80","name":"roundId","type":"uint80"},{"internalType":"int256","name":"answer","type":"int256"},{"internalType":"uint256","name":"startedAt","type":"uint256"},{"internalType":"uint256","name":"updatedAt","type":"uint256"},{"internalType":"uint80","name":"answeredInRound","type":"uint80"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"version","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"}];
+        const addr = "0x0567F2323251f0Aab15c8dFb1967E4e8A7D42aeE";
+        const priceFeed = new web3.eth.Contract(aggregatorV3InterfaceABI, addr);
+        priceFeed.methods.latestRoundData().call()
+            .then((roundData) => {
+                // Do something with roundData
+                const calcRoundData = (roundData.answer * 1) / (10 ** 8)
+                setData(calcRoundData)
+                setLoading(false)
+                console.log("Latest Round Data", calcRoundData)
+            });
 
+        
+        
+        setChrtState({ loading: true });
+        const interval = setInterval(() => {
+            const apiUrl = `https://api.drip.community/prices`;
+            axios
+                .get(apiUrl)
+                .then((res) => {
+                    
+                    // res.data.map(time_res => {
+                    
+                        
+                    //         // empTime.push(timeConverter(time_res["time"]))
+                    //         empValue.push(time_res["value"])
+                        
+                    //         setChrtState({ loading: false });
+                    // } )
+
+                    console.log(res.data[2490].value)
+                    setChrtState({ drip: res.data[2490].value })
+                    setDripData(res.data[2490].value )
+                    setDripLoading(false)
+                });
+            
+            }, 10000);
+            return () => clearInterval(interval);  
+
+        
+        
+        
+        
+        
+        //To get historical round data you must have valid ID for a latest round datas
+            // const aggregatorV3InterfaceABI2 = [{"inputs":[],"name":"decimals","outputs":[{"internalType":"uint8","name":"","type":"uint8"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"description","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint80","name":"_roundId","type":"uint80"}],"name":"getRoundData","outputs":[{"internalType":"uint80","name":"roundId","type":"uint80"},{"internalType":"int256","name":"answer","type":"int256"},{"internalType":"uint256","name":"startedAt","type":"uint256"},{"internalType":"uint256","name":"updatedAt","type":"uint256"},{"internalType":"uint80","name":"answeredInRound","type":"uint80"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"latestRoundData","outputs":[{"internalType":"uint80","name":"roundId","type":"uint80"},{"internalType":"int256","name":"answer","type":"int256"},{"internalType":"uint256","name":"startedAt","type":"uint256"},{"internalType":"uint256","name":"updatedAt","type":"uint256"},{"internalType":"uint80","name":"answeredInRound","type":"uint80"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"version","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"}];
+            // const addr2 = "0x0567F2323251f0Aab15c8dFb1967E4e8A7D42aeE";
+            // const priceFeed2 = new web3.eth.Contract(aggregatorV3InterfaceABI2, addr2);
+            
+            // // Valid roundId must be known. They are NOT incremental.
+            // let validId = BigInt("18446744073709554130");
+            
+            // priceFeed2.methods.getRoundData(validId).call()
+            //     .then((historicalRoundData) => {
+            //         // Do something with price
+            //         console.log("Historical round data", historicalRoundData);
+            //     })
         // to get token balance
         // const tokBal = web3.eth.getBalance(defaultAccount)
         // console.log(tokBal)
         // console.log(defaultAccount)
+        
 
     }, []);
 
+    
+    
+    
     const accountChangedHandler = (newAccount) => {
         setDefaultAccount(newAccount);
         getUserBalance(newAccount.toString());
@@ -354,9 +456,19 @@ export default function Dashboard() {
                     overflow="auto"
                     minH="100vh"
                 >
-                    <Heading fontWeight="normal">Welcome back,, <Flex fontWeight="bold" display="inline-flex">Ola Silva A.</Flex></Heading>
-                    <Text color="gray" fontSize="sm">{isLoading? "Loading": "$"+(data?.data?.price  * userBalance).toFixed(2)}</Text>
+                    <Heading fontWeight="normal">Wallet <Flex fontWeight="bold" display="inline-flex">Balance</Flex></Heading>
+                    
                     <Text fontWeight="bold" fontSize="2xl">{userBalance} {userChain}</Text>
+                    <Text color="gray" fontSize="sm">{isLoading ? "Loading" : "$" + (data * userBalance).toFixed(2)}</Text>
+                    {/* <Text color="gray" fontSize="sm">{isLoading? "Loading": "$"+(data?.data?.price  * userBalance).toFixed(2)}</Text> */}
+                  
+                    
+                    <Flex justifyContent="space-between" mt={8} align='center' >
+                        
+                        <Text fontSize="sm" color="gray.700" fontWeight="bold">Drip/USDT: ${chrtState.drip}</Text>
+                        <Button borderRadius="20px" w="auto" boxShadow="xl" variant="outline" fontSize='x-small' mr={0} >24hr</Button>
+                        
+                    </Flex>
                     <MyChart />
                     <Flex justifyContent="space-between" mt={8}>
                         <Flex align="flex-end">
@@ -490,7 +602,7 @@ export default function Dashboard() {
                             <Flex p="1em" color="#fff" flexDir="column" h="100%" justify="space-between" >
                                 <Flex justify="space-between" w="100%" align="flex-start">
                                     <Flex flexDir="column">
-                                        <Text color="gray.400">Current Balance</Text>
+                                        <Text color="gray.400">Current {userChain} Balance</Text>
                                         <Text fontWeight="bold" fontSize="xl">{userBalance} {userChain}</Text>
                                     </Flex>
                                     <Flex align="center">
@@ -498,7 +610,8 @@ export default function Dashboard() {
                                         <Text>Mila.</Text>
                                     </Flex>
                                 </Flex>
-                                <Text mb={4}>{isLoading? "Loading": "$"+(data?.data?.price  * userBalance).toFixed(2)} - [{((data?.data?.price)*1).toFixed(2)}]</Text>
+                                <Text mb={4}>{isLoading? "Loading": "$"+(data  * userBalance).toFixed(4)} - [${((data)*1).toFixed(4)}]</Text>
+                                {/* <Text mb={4}>{isLoading? "Loading": "$"+(data?.data?.price  * userBalance).toFixed(2)} - [${((data?.data?.price)*1).toFixed(2)}]</Text> */}
                                 <Flex align="flex-end" justify="space-between">
                                     <Flex>
                                         <Flex flexDir="column" mr={4}>
@@ -598,9 +711,118 @@ export default function Dashboard() {
                         <Button bgColor={value == 3 ? "gray.600" : 'gray.400'} onClick={() => changeValue(3)} size="xs" mx={1}/>
                     </Flex>
                     
-                   
+                    <Box bg="#ffffff" p={4} mt={8} borderRadius="20px" border='0px' borderColor="#dc35464b" boxShadow="xl" color="gray.700" >
+                            <Flex flexDir="column">
+                                <Flex flexDir="row" justifyContent="space-between">
+                                    <Text fontWeight="medium">Swap</Text>
+                                    
+                                    <Flex flexDir="row" align="center" >
+                                        <Flex flexDir="column" >
+                                        <Text fontSize="xs" fontWeight="bold" mx="2" align="end">walletTokenBalance</Text>
+                                            <Text fontSize="xs" fontWeight="bold" mx="2" align="end">tokenBalance</Text>
+                                        </Flex>
+                                        <Button borderRadius="20px" w="auto" boxShadow="xl" variant="outline"  fontSize="sm" >max</Button>
+                                    </Flex>
+                                </Flex>
+                                
+                                <Flex flexDir="row" p={6} mt={4} borderRadius="20px" bgColor="gray.200" align="center" justify="space-between">
+                                  
+                                        <Input
+                                            placeholder="0.0"
+                                            w="50%"
+                                            _hover={{
+                                                border: '0px'
+                                            }}
+                                            // onChange={handleFromAmountChange}
+                                            // value={fromAmount}
+                                            // value={fromAmount? fromAmount:0}
+                                        />
+                                    
+                                        
+                                    <Button borderRadius="20px" w="auto" boxShadow="xl" fontSize="sm" onClick={() => setFromModalActive(true)}>
+                                            {/* <Icon as={FiDroplet} mx={3} /> */}
+                                           
+                                            <span pl="5px"> fromToken?.symbol</span>
+                                            <Icon as={FiChevronDown} mx={3} />
+                                    
+                                            </Button>
+                                    
+                                   
+                                </Flex>
+                                <Flex flexDir="row" justifyContent="flex-end">
+                                    <Text fontSize="xs" fontWeight="bold" >fromTokenPriceUsd</Text>
+                                  
+                                </Flex>
+                                
+                                <Flex align="center" mt={3}>
+                                    <Divider />
+                                    <IconButton
+                                        icon={<><FiChevronUp /> <FiChevronDown /></>}
+                                        onClick={() => {
+                                            if (swap == 'fromto') {
+                                                swapChange('tofrom')
+                                            } else {
+                                                swapChange('fromto')
+                                            }
+                                        }
+
+                                        } />
+                                
+                                    {/* <IconButton
+                                    icon={display === 'show' ? <FiChevronUp /> : <FiChevronDown />}
+                                    onClick={() => {
+                                        if (display == 'show') {
+                                            changeDisplay('none')
+                                        } else {
+                                            changeDisplay('show')
+                                        }
+                                    }
+
+                                    } /> */}
+                                    <Divider />
+                                </Flex>
+                            
+                                <Flex flexDir="row" p={6} mt={3} borderRadius="20px" bgColor="gray.200" align="center"  justify="space-between">
+                                    <Input
+                                        placeholder="0.0"
+                                        w="50%"
+                                        _hover={{
+                                            border: '0px'
+                                        }}
+                                        // value={quote ? Moralis.Units.FromWei(quote?.toTokenAmount, quote?.toToken?.decimals).toFixed(6) : ""}
+
+                                    />
+                                
+        <Button borderRadius="20px" boxShadow="xl" w="auto" fontSize="sm" onClick={() => setToModalActive(true)}>
+      
+              <span> toToken?.symbol</span>
+            <Icon as={FiChevronDown} mx={2} />
+            
+        </Button>
+                                    
+                                
+                                </Flex>
+                                <Flex flexDir="row" justifyContent="flex-end">
+                                    <Text fontSize="xs" fontWeight="bold" >toTokenPriceUsd</Text>
+                                  
+                                </Flex>
+                              
+                                <Button
+                                    py={5}
+                                    borderRadius="15px"
+                                    bgColor="#dc35464b"
+                                    // isDisabled={buttonEnable}
+                                    mt={5}
+                                    // onClick={() => trySwap(currentTrade)}
+                                >Swap</Button>
+                              
+                            </Flex>
+                            <Flex>
+                            
+                            </Flex>
+                        </Box>
                         
-                    {swap == "fromto" &&
+                    {(dexTuggle && (swap == "fromto")) &&
                         <Box bg="#ffffff" p={4} mt={8} borderRadius="20px" border='0px' borderColor="#dc35464b" boxShadow="xl" color="gray.700" >
                             <Flex flexDir="column">
                                 <Flex flexDir="row" justifyContent="space-between">
@@ -712,7 +934,7 @@ export default function Dashboard() {
                             </Flex>
                         </Box>
                     }
-                    {swap === "tofrom" &&
+                    {(dexTuggle && (swap === "tofrom"))  &&
                     <Box bg="#ffffff" p={4} mt={8} borderRadius="20px" border='0px' borderColor="#dc35464b" boxShadow="xl">
                             <Flex flexDir="column">
                                 <Text fontWeight="medium">Swap</Text>
@@ -944,10 +1166,16 @@ export default function Dashboard() {
                     overflow="auto"
                     minH="100vh"
                 >
-                    <Heading fontWeight="normal">Welcome back, <Flex fontWeight="bold" display="inline-flex">Ola Silva A.</Flex></Heading>
-                    <Text color="gray" fontSize="sm">My Balance</Text>
-                    <Text fontWeight="bold" fontSize="2xl">Connect Wallet</Text>
-                    <MyChart />
+                    <Heading fontWeight="normal">Milala, <Flex fontWeight="bold" display="inline-flex">Blockchain.</Flex></Heading>
+                    <Text color="gray" fontSize="sm">Invest in African Businesses from anywhere</Text>
+                <Text fontWeight="bold" fontSize="2xl">Connect Wallet</Text>
+                <Flex justifyContent="space-between" mt={8} align='center' >
+                        
+                        <Text fontSize="sm" color="gray.700" fontWeight="bold">Drip/USDT: ${chrtState.drip}</Text>
+                        <Button borderRadius="20px" w="auto" boxShadow="xl" variant="outline" fontSize='x-small' mr={0} >24hr</Button>
+                        
+                    </Flex>
+                 <MyChart />
                     <Flex justifyContent="space-between" mt={8}>
                         <Flex align="flex-end">
                             <Heading as="h2" size="lg" letterSpacing="Tight">Transactions</Heading>
