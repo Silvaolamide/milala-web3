@@ -54,7 +54,9 @@ let empValue = [];
 
 // import { ethers } from 'ethers';
 
+// import InchModal from "../components/InchModal";
 import InchModal from "../components/InchModal";
+import useInchDex from "../src/hooks/useInchDex";
 
 // console.log(data)
 
@@ -68,6 +70,7 @@ export default function Dashboard() {
     const [defaultAccount, setDefaultAccount] = useState(null);
     const [userBalance, setUserBalance] = useState(null);
     const [userAccount, setUserAccount] = useState(null);
+    const [userAccount0, setUserAccount0] = useState(null);
     const [userChain, setUserChain] = useState(null);
     const [userChainId, setUserChainId] = useState(null);
     const [userNetworkName, setUserNetworkName] = useState(null);
@@ -81,10 +84,27 @@ export default function Dashboard() {
     const [busdIsLoading, setBusdLoading] = useState(false)
     const [dripIsLoading, setDripLoading] = useState(false)
 
+
+    const { trySwap, tokenList, getQuote, swapComplete } = useInchDex(userChainId);
+    const [isFromModalActive, setFromModalActive] = useState(false);
+    const [isToModalActive, setToModalActive] = useState(false);
+    const [fromToken, setFromToken] = useState();
+    const [toToken, setToToken] = useState();
+    const [tokenBalance, setTokenBalance] = useState();
+    const [walletTokenBalance, setWalletTokenBalance] = useState();
+    const [fromTokenPriceUsd, setFromTokenPriceUsd] = useState();
+    const [fromAmount, setFromAmount] = useState();
+    const [quote, setQuote] = useState({
+        toTokenPrice: null,
+        quoteGas: null,
+
+    });
+
+
     const [chrtState, setChrtState] = useState({
         loading: true,
         drip: null,
-      });
+    });
     const [chartData, setChartData] = useState([]);
     const [chartData2, setChartData2] = useState([]);
     const [chartData3, setChartData3] = useState([]);
@@ -94,12 +114,31 @@ export default function Dashboard() {
     //I want to hide the dex ui for now
     const [dexTuggle, setDexTuggle] = useState(false)
 
+    //I want to set price loading or otherwise
+    const [loadingPrice, setLoadingPrice] = useState(false)
+
     let chainId
-  
+    let web3
+
+
+    const handleFromAmountChange = (event) => setFromAmount(event.target.value)
     
-// console.log("Jehhhh5", empValue)
+    // console.log("tokenListt", fromToken)
+    // console.log("Jehhhh5", empValue)
 
 
+    useEffect( async () => {
+        let provider = window.ethereum;
+        web3 = new Web3(provider);
+        if (typeof provider !== 'undefined') {
+            await provider.request({ method: 'eth_requestAccounts' }).then(accounts => {
+             
+                setUserAccount0(accounts[0])
+            });
+       }
+            
+    });
+        
     useEffect(() => {
         
         
@@ -109,6 +148,7 @@ export default function Dashboard() {
             provider.request({ method: 'eth_requestAccounts' }).then(accounts => {
              
                 setUserAccount(accounts)
+                
                 setPersistentLogin(accounts)
                 // Web3.eth.getChainId().then(console.log);
                 // console.log(accounts)
@@ -117,23 +157,26 @@ export default function Dashboard() {
                 getChainID();
                 
                 // Maybe I should make this repeat every 15 secs
-                    // const interval = setInterval(() => {
+                // const interval = setInterval(() => {
                         
-                    
+                  
                                 
-                        const busdAddress = "0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56";
-                        const holderAddress = "0x8894e0a0c962cb723c1976a4421c95949be2d4e3";
-                        const dripHolderAddress = "0x20f663cea80face82acdfa3aae6862d246ce0333";
+                const busdAddress = "0xFFE811714ab35360b67eE195acE7C10D93f89D8C";
+                const holderAddress = "0x8894e0a0c962cb723c1976a4421c95949be2d4e3";
+                const dripHolderAddress = "0x20f663cea80face82acdfa3aae6862d246ce0333";
                 
 
-                        // just the `balanceOf()` is sufficient in this case
-                        const abiJson = [
-                            {"constant":true,"inputs":[{"name":"who","type":"address"}],"name":"balanceOf","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},
-                        ];
-
-                        const contract = new web3.eth.Contract(abiJson, busdAddress);
-                        const balance = contract.methods.balanceOf(accounts[0]).call()
+                // just the `balanceOf()` is sufficient in this case
+                const abiJson = [
+                    { "constant": true, "inputs": [{ "name": "who", "type": "address" }], "name": "balanceOf", "outputs": [{ "name": "", "type": "uint256" }], "payable": false, "stateMutability": "view", "type": "function" },
+                ];
+                const abiJson2 = [
+                    { "inputs": [{ "internalType": "address", "name": "_addr", "type": "address" }], "name": "claimsAvailable", "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }], "stateMutability": "view", "type": "function" },
+                ];
+                        const contract = new web3.eth.Contract(abiJson2, busdAddress);
+                        const balance = contract.methods.claimsAvailable(accounts[0]).call()
                             .then(busdBalance => {
+                                console.log("this is it", busdBalance)
                                 const calcBusdBal = (busdBalance/(10 ** 18))
                                 console.log("addressBalance", calcBusdBal);
                                 setBusdBal(calcBusdBal)
@@ -157,6 +200,15 @@ export default function Dashboard() {
                         // note that this number includes the decimal places (in case of BUSD, that's 18 decimal places)
                     // }, 10000);
                     // return () => clearInterval(interval); 
+                
+                          
+                  
+
+                    
+                
+
+
+                
        
             }).catch(err => {
                 console.log(err);
@@ -204,11 +256,7 @@ export default function Dashboard() {
         //         console.log("drip", data["drip-network"]["usd"])
         // })
         
-        
-
-        
-        
-        const web3 = new Web3(provider);
+        // const web3 = new Web3(provider);
 
         //{  although I already have the chainID/NetworkId from Metamask, I just used this block of code
         //to begin testing of web3 }
@@ -224,6 +272,8 @@ export default function Dashboard() {
         );
         // console.log("network", networkId);
 
+
+        
         setLoading(true)
         
         //get price from oracle... chainlink is the most popular of them all
@@ -291,6 +341,195 @@ export default function Dashboard() {
         
 
     }, []);
+
+
+
+    
+  
+        
+    useEffect(async() => {
+        const checkTokenPriceAddress = fromToken?.address
+        const checkTokenPriceSymbol = fromToken?.symbol
+        const userA = await userAccount0
+        // console.log(checkTokenPriceAddress)
+
+        // fetchTokenPrice(checkTokenPriceAddress)
+
+
+        // fetchTokenPrice({ params: { address: checkTokenPriceAddress,  chain: "bsc" }, onSuccess: (price) => setFromTokenPriceUsd(price.usdPrice + " USDT/"+checkTokenPriceSymbol) })
+        // fetchTokenPrice({ params: { address: "0x6...361",  chain: "bsc" }, onSuccess: (price) => console.log(price) })
+        if (userA == null) return null
+
+        setLoadingPrice(true)
+        
+        // const apiUrl = `https://api.coingecko.com/api/v3/simple/price?ids=${checkTokenPriceSymbol}&vs_currencies=usd`;
+        const apiUrl = `https://api.pancakeswap.info/api/v2/tokens/${checkTokenPriceAddress}`;
+        axios
+            .get(apiUrl)
+            .then((data) => {
+                console.log(data.data?.data)    
+                setFromTokenPriceUsd(data.data?.data?.price)
+                setLoadingPrice(false)
+               
+                    // console.log(checkTokenPriceSymbol, data[checkTokenPriceSymbol]["usd"])
+            })
+        // axios
+        //     .get(apiUrl)
+        //     .then((data) => {
+        //         console.log(data["data"][checkTokenPriceSymbol.toLowerCase()]['usd'], data["data"])    
+        //         setTokenBalance(data["data"][checkTokenPriceSymbol.toLowerCase()]['usd'])
+        //         setLoadingPrice(false)
+               
+        //             // console.log(checkTokenPriceSymbol, data[checkTokenPriceSymbol]["usd"])
+        //     })
+        
+        //So I decided to put all of this fetchin of user balanceOf into a function
+                                
+                
+
+
+            const abiJson3 = [
+                { "constant": true, "inputs": [{ "name": "who", "type": "address" }], "name": "balanceOf", "outputs": [{ "name": "", "type": "uint256" }], "payable": false, "stateMutability": "view", "type": "function" },
+            ];
+        
+                const contract3 = new web3.eth.Contract(abiJson3, checkTokenPriceAddress);
+                const balance3 = await contract3.methods.balanceOf(userA).call()
+                    .then(tokenBalance => {
+                        const calcTokenBal = (tokenBalance / (10 ** 18))
+                        // console.log("fromToken", calcTokenBal);
+                        
+                        const tokenBalUsd = (calcTokenBal * Number(fromTokenPriceUsd)).toFixed(2)
+                        setTokenBalance(tokenBalUsd)
+                        setWalletTokenBalance(calcTokenBal)
+                    }).catch(
+                        err => {
+                            console.log("network error", err)
+                        }
+                    );
+                
+        
+            
+        
+ 
+
+    }, [fromToken])
+
+
+
+    useEffect(async () => {
+        
+        const fromTokenPriceAddress = fromToken?.address
+        const toTokenPriceAddress = toToken?.address
+        const fromAmount1 = Number(fromAmount)
+        const checkTokenPriceSymbol = toToken?.symbol
+        const userA = await userAccount0
+        // console.log(checkTokenPriceAddress) 
+
+        // fetchTokenPrice(checkTokenPriceAddress)
+
+
+        // fetchTokenPrice({ params: { address: checkTokenPriceAddress,  chain: "bsc" }, onSuccess: (price) => setFromTokenPriceUsd(price.usdPrice + " USDT/"+checkTokenPriceSymbol) })
+        // fetchTokenPrice({ params: { address: "0x6...361",  chain: "bsc" }, onSuccess: (price) => console.log(price) })
+        if (userA == null) return null
+
+        // setLoadingPrice(true)
+        
+        // const apiUrl = `https://api.coingecko.com/api/v3/simple/price?ids=${checkTokenPriceSymbol}&vs_currencies=usd`;
+        const apiUrl = `https://api.1inch.exchange/v4.0/56/quote?fromTokenAddress=${fromTokenPriceAddress}&toTokenAddress=${toTokenPriceAddress}&amount=${fromAmount1}`;
+        await axios
+            .get(apiUrl)
+            .then((data) => {
+                console.log("quote", data)
+                setQuote({
+                    toTokenPrice: data?.data.toTokenAmount,
+                    quoteGas: data?.data.estimatedGas,
+                })
+                // setFromTokenPriceUsd(data.data?.data?.price)
+                // setLoadingPrice(false)
+               
+                // console.log(checkTokenPriceSymbol, data[checkTokenPriceSymbol]["usd"])
+            })
+            .catch(
+                err => {
+                    console.log("Quote error", err)
+                }
+            );
+        
+    }, [toToken, fromAmount])
+
+
+
+    // useEffect(() => {
+    //     const checkTokenPriceAddress = toToken?.address
+    //     const checkTokenPriceSymbol = toToken?.symbol
+    //     // console.log(checkTokenPriceAddress)
+    //     // fetchTokenPrice({ params: { address: checkTokenPriceAddress,  chain: "bsc" }, onSuccess: (price) => setToTokenPriceUsd(price.usdPrice + " USDT/"+checkTokenPriceSymbol) })
+    //     // fetchTokenPrice({ params: { address: "0x6...361",  chain: "bsc" }, onSuccess: (price) => console.log(price) })
+    //     const userA = await userAccount0
+ 
+    //     // fetchTokenPrice({ params: { address: checkTokenPriceAddress,  chain: "bsc" }, onSuccess: (price) => setFromTokenPriceUsd(price.usdPrice + " USDT/"+checkTokenPriceSymbol) })
+    //     // fetchTokenPrice({ params: { address: "0x6...361",  chain: "bsc" }, onSuccess: (price) => console.log(price) })
+    //     if (userA == null) return null
+
+    //     setToTokenLoadingPrice(true)
+        
+    //     // const apiUrl = `https://api.coingecko.com/api/v3/simple/price?ids=${checkTokenPriceSymbol}&vs_currencies=usd`;
+    //     const apiUrl = `https://api.pancakeswap.info/api/v2/tokens/${checkTokenPriceAddress}`;
+    //     axios
+    //         .get(apiUrl)
+    //         .then((data) => {
+    //             console.log(data.data?.data)    
+    //             setToTokenPriceUsd(data.data?.data?.price)
+    //             setToTokenLoadingPrice(false)
+               
+    //                 // console.log(checkTokenPriceSymbol, data[checkTokenPriceSymbol]["usd"])
+    //         })
+    //     // axios
+    //     //     .get(apiUrl)
+    //     //     .then((data) => {
+    //     //         console.log(data["data"][checkTokenPriceSymbol.toLowerCase()]['usd'], data["data"])    
+    //     //         setTokenBalance(data["data"][checkTokenPriceSymbol.toLowerCase()]['usd'])
+    //     //         setLoadingPrice(false)
+               
+    //     //             // console.log(checkTokenPriceSymbol, data[checkTokenPriceSymbol]["usd"])
+    //     //     })
+        
+    //     //So I decided to put all of this fetchin of user balanceOf into a function
+                                
+                
+
+
+    //         const abiJson3 = [
+    //             { "constant": true, "inputs": [{ "name": "who", "type": "address" }], "name": "balanceOf", "outputs": [{ "name": "", "type": "uint256" }], "payable": false, "stateMutability": "view", "type": "function" },
+    //         ];
+        
+    //             const contract3 = new web3.eth.Contract(abiJson3, checkTokenPriceAddress);
+    //             const balance3 = await contract3.methods.balanceOf(userA).call()
+    //                 .then(tokenBalance => {
+    //                     const calcTokenBal = (tokenBalance / (10 ** 18))
+    //                     // console.log("fromToken", calcTokenBal);
+                        
+    //                     const tokenBalUsd = (calcTokenBal * Number(fromTokenPriceUsd)).toFixed(2)
+    //                     setToTokenBalance(tokenBalUsd)
+    //                     setWalletTokenBalance(calcTokenBal)
+    //                 }).catch(
+    //                     err => {
+    //                         console.log("network error", err)
+    //                     }
+    //                 );
+                
+        
+            
+        
+ 
+
+
+
+
+
+    // }, [toToken])
+
+
 
     
     
@@ -718,10 +957,16 @@ export default function Dashboard() {
                                     
                                     <Flex flexDir="row" align="center" >
                                         <Flex flexDir="column" >
-                                        <Text fontSize="xs" fontWeight="bold" mx="2" align="end">walletTokenBalance</Text>
-                                            <Text fontSize="xs" fontWeight="bold" mx="2" align="end">tokenBalance</Text>
+                                        <Text fontSize="xs" fontWeight="bold" mx="2" align="end">
+                                    {loadingPrice? "Loading": walletTokenBalance}
+                                   
+                                        </Text>
+                                        <Text fontSize="xs" fontWeight="bold" mx="2" align="end">
+                                        {/* {loadingPrice? "Loading": "$"+tokenBalance} */}
+                                        </Text>
                                         </Flex>
-                                        <Button borderRadius="20px" w="auto" boxShadow="xl" variant="outline"  fontSize="sm" >max</Button>
+                                    <Button borderRadius="20px" w="auto" boxShadow="xl" variant="outline" fontSize="sm"
+                                        onClick={() => {setFromAmount(walletTokenBalance) }}>max</Button>
                                     </Flex>
                                 </Flex>
                                 
@@ -733,16 +978,26 @@ export default function Dashboard() {
                                             _hover={{
                                                 border: '0px'
                                             }}
-                                            // onChange={handleFromAmountChange}
+                                            onChange={handleFromAmountChange}
                                             // value={fromAmount}
-                                            // value={fromAmount? fromAmount:0}
+                                            value={fromAmount? fromAmount:""}
                                         />
                                     
                                         
                                     <Button borderRadius="20px" w="auto" boxShadow="xl" fontSize="sm" onClick={() => setFromModalActive(true)}>
                                             {/* <Icon as={FiDroplet} mx={3} /> */}
-                                           
-                                            <span pl="5px"> fromToken?.symbol</span>
+                                            {fromToken ? (
+                <img
+                  src={fromToken?.logoURI || "https://etherscan.io/images/main/empty-token.png"}
+                  alt="nologo"
+                  width="30px"
+                  preview={false}
+                                                style={{ borderRadius: "15px", paddingRight:"5px" }}
+                />
+              ) : (
+                <span>Select a token</span>
+              )}
+                                            <span pl="5px"> {fromToken?.symbol}</span>
                                             <Icon as={FiChevronDown} mx={3} />
                                     
                                             </Button>
@@ -750,7 +1005,7 @@ export default function Dashboard() {
                                    
                                 </Flex>
                                 <Flex flexDir="row" justifyContent="flex-end">
-                                    <Text fontSize="xs" fontWeight="bold" >fromTokenPriceUsd</Text>
+                                <Text fontSize="xs" fontWeight="bold" >{fromTokenPriceUsd}</Text>
                                   
                                 </Flex>
                                 
@@ -790,12 +1045,24 @@ export default function Dashboard() {
                                             border: '0px'
                                         }}
                                         // value={quote ? Moralis.Units.FromWei(quote?.toTokenAmount, quote?.toToken?.decimals).toFixed(6) : ""}
+                                        value={quote ? quote.toTokenPrice : ""}
+                                    
 
                                     />
                                 
         <Button borderRadius="20px" boxShadow="xl" w="auto" fontSize="sm" onClick={() => setToModalActive(true)}>
-      
-              <span> toToken?.symbol</span>
+        {toToken ? (
+                <img
+                  src={toToken?.logoURI || "https://etherscan.io/images/main/empty-token.png"}
+                  alt="nologo"
+                  width="30px"
+                  preview={false}
+                                                style={{ borderRadius: "15px", paddingRight:"5px" }}
+                />
+              ) : (
+                <span>Select a token</span>
+              )}
+                                    <span> {toToken?.symbol}</span>
             <Icon as={FiChevronDown} mx={2} />
             
         </Button>
@@ -853,8 +1120,18 @@ export default function Dashboard() {
                                         
                                     <Button borderRadius="20px" w="auto" boxShadow="xl" fontSize="sm" onClick={() => setFromModalActive(true)}>
                                             {/* <Icon as={FiDroplet} mx={3} /> */}
-                                           
-                                            <span pl="5px"> fromToken?.symbol</span>
+                                            {fromToken ? (
+                <img
+                  src={fromToken?.logoURI || "https://etherscan.io/images/main/empty-token.png"}
+                  alt="nologo"
+                  width="30px"
+                  preview={false}
+                                                style={{ borderRadius: "15px", paddingRight:"5px" }}
+                />
+              ) : (
+                <span>Select a token</span>
+              )}
+                                        <span pl="5px"> {fromToken?.symbol}</span>
                                             <Icon as={FiChevronDown} mx={3} />
                                     
                                             </Button>
@@ -952,7 +1229,7 @@ export default function Dashboard() {
                                         
                                     <Button borderRadius="20px" w="auto" boxShadow="xl" fontSize="sm" onClick={() => setToModalActive(true)}>
                                             {/* <Icon as={FiDroplet} mx={3} /> */}
-                                            {/* {toToken ? (
+                                            {toToken ? (
                                                 <img
                                                 src={toToken?.logoURI || "https://etherscan.io/images/main/empty-token.png"}
                                                 alt="nologo"
@@ -962,7 +1239,7 @@ export default function Dashboard() {
                                                 />
                                             ) : (
                                                 <span>Select a token</span>
-                                            )} */}
+                                            )}
                                             <span pl="5px"> toToken?.symbol</span>
                                             <Icon as={FiChevronDown} mx={3} />
                                     
@@ -1010,7 +1287,7 @@ export default function Dashboard() {
                                     />
                                 
         <Button borderRadius="20px" boxShadow="xl" w="auto" fontSize="sm" onClick={() => setFromModalActive(true)}>
-        {/* {fromToken ? (
+        {fromToken ? (
                 <img
                   src={fromToken?.logoURI || "https://etherscan.io/images/main/empty-token.png"}
                   alt="nologo"
@@ -1020,8 +1297,8 @@ export default function Dashboard() {
                 />
               ) : (
                 <span>Select a token</span>
-              )} */}
-              <span> fromToken?.symbol</span>
+              )}
+                                        <span> {fromToken?.symbol}</span>
             <Icon as={FiChevronDown} mx={2} />
             
         </Button>
@@ -1066,7 +1343,22 @@ export default function Dashboard() {
                     </InputGroup>
                     <Button mt={4} bgColor="blackAlpha.900" color="#fff" p={7} borderRadius="15">Send Money</Button>
                 </Flex>
+                        
           
+                <InchModal
+                    open={isFromModalActive}
+                    onClose={() => setFromModalActive(false)}
+                    setToken={setFromToken}
+                    tokenList={tokenList}
+                    />    
+                        
+                    <InchModal
+                    open={isToModalActive}
+                    onClose={() => setToModalActive(false)}
+                    setToken={setToToken}
+                    tokenList={tokenList}
+                    />    
+              
             </Flex>
             
         )
