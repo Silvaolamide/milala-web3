@@ -50,9 +50,53 @@ import Web3 from 'web3';
 import axios from 'axios';
 let empTime = [];
 let empValue = [];
+// import { ChainId, Token, WETH, Fetcher, Route } from "@pancakeswap-libs/sdk";
+import { CurrencyAmount,  ChainId, Fetcher, Route,  WETH, JSBI, Token, TokenAmount, Trade, TradeType, factory, Percent, Pair} from '@pancakeswap/sdk'
 
 
-// import { ethers } from 'ethers';
+import { ethers } from 'ethers';
+// const habi = require('human-standard-token-abi');
+// const {ChainId, Token, TokenAmount, Fetcher: v2Fetcher, Pair, Route, Trade, TradeType, Percent} = require('@pancakeswap/sdk');
+console.log("NewChain", ChainId.MAINNET);
+
+
+
+
+
+
+var pv = ""
+var pu = ""
+var Tx = require('ethereumjs-tx').Transaction;
+// var Web3 = require('web3')
+var Common = require('ethereumjs-common').default;
+
+var pancakeSwapAbi = [{"inputs":[{"internalType":"address","name":"_factory","type":"address"},{"internalType":"address","name":"_WETH","type":"address"}],"stateMutability":"nonpayable","type":"constructor"},{"inputs":[],"name":"WETH","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"tokenA","type":"address"},{"internalType":"address","name":"tokenB","type":"address"},{"internalType":"uint256","name":"amountADesired","type":"uint256"},{"internalType":"uint256","name":"amountBDesired","type":"uint256"},{"internalType":"uint256","name":"amountAMin","type":"uint256"},{"internalType":"uint256","name":"amountBMin","type":"uint256"},{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"deadline","type":"uint256"}],"name":"addLiquidity","outputs":[{"internalType":"uint256","name":"amountA","type":"uint256"},{"internalType":"uint256","name":"amountB","type":"uint256"},{"internalType":"uint256","name":"liquidity","type":"uint256"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"token","type":"address"},{"internalType":"uint256","name":"amountTokenDesired","type":"uint256"},{"internalType":"uint256","name":"amountTokenMin","type":"uint256"},{"internalType":"uint256","name":"amountETHMin","type":"uint256"},{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"deadline","type":"uint256"}],"name":"addLiquidityETH","outputs":[{"internalType":"uint256","name":"amountToken","type":"uint256"},{"internalType":"uint256","name":"amountETH","type":"uint256"},{"internalType":"uint256","name":"liquidity","type":"uint256"}],"stateMutability":"payable","type":"function"},{"inputs":[],"name":"factory","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"amountOut","type":"uint256"},{"internalType":"uint256","name":"reserveIn","type":"uint256"},{"internalType":"uint256","name":"reserveOut","type":"uint256"}],"name":"getAmountIn","outputs":[{"internalType":"uint256","name":"amountIn","type":"uint256"}],"stateMutability":"pure","type":"function"},{"inputs":[{"internalType":"uint256","name":"amountIn","type":"uint256"},{"internalType":"uint256","name":"reserveIn","type":"uint256"},{"internalType":"uint256","name":"reserveOut","type":"uint256"}],"name":"getAmountOut","outputs":[{"internalType":"uint256","name":"amountOut","type":"uint256"}],"stateMutability":"pure","type":"function"},{"inputs":[{"internalType":"uint256","name":"amountOut","type":"uint256"},{"internalType":"address[]","name":"path","type":"address[]"}],"name":"getAmountsIn","outputs":[{"internalType":"uint256[]","name":"amounts","type":"uint256[]"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"amountIn","type":"uint256"},{"internalType":"address[]","name":"path","type":"address[]"}],"name":"getAmountsOut","outputs":[{"internalType":"uint256[]","name":"amounts","type":"uint256[]"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"uint256","name":"amountA","type":"uint256"},{"internalType":"uint256","name":"reserveA","type":"uint256"},{"internalType":"uint256","name":"reserveB","type":"uint256"}],"name":"quote","outputs":[{"internalType":"uint256","name":"amountB","type":"uint256"}],"stateMutability":"pure","type":"function"},{"inputs":[{"internalType":"address","name":"tokenA","type":"address"},{"internalType":"address","name":"tokenB","type":"address"},{"internalType":"uint256","name":"liquidity","type":"uint256"},{"internalType":"uint256","name":"amountAMin","type":"uint256"},{"internalType":"uint256","name":"amountBMin","type":"uint256"},{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"deadline","type":"uint256"}],"name":"removeLiquidity","outputs":[{"internalType":"uint256","name":"amountA","type":"uint256"},{"internalType":"uint256","name":"amountB","type":"uint256"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"token","type":"address"},{"internalType":"uint256","name":"liquidity","type":"uint256"},{"internalType":"uint256","name":"amountTokenMin","type":"uint256"},{"internalType":"uint256","name":"amountETHMin","type":"uint256"},{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"deadline","type":"uint256"}],"name":"removeLiquidityETH","outputs":[{"internalType":"uint256","name":"amountToken","type":"uint256"},{"internalType":"uint256","name":"amountETH","type":"uint256"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"token","type":"address"},{"internalType":"uint256","name":"liquidity","type":"uint256"},{"internalType":"uint256","name":"amountTokenMin","type":"uint256"},{"internalType":"uint256","name":"amountETHMin","type":"uint256"},{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"deadline","type":"uint256"}],"name":"removeLiquidityETHSupportingFeeOnTransferTokens","outputs":[{"internalType":"uint256","name":"amountETH","type":"uint256"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"token","type":"address"},{"internalType":"uint256","name":"liquidity","type":"uint256"},{"internalType":"uint256","name":"amountTokenMin","type":"uint256"},{"internalType":"uint256","name":"amountETHMin","type":"uint256"},{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"deadline","type":"uint256"},{"internalType":"bool","name":"approveMax","type":"bool"},{"internalType":"uint8","name":"v","type":"uint8"},{"internalType":"bytes32","name":"r","type":"bytes32"},{"internalType":"bytes32","name":"s","type":"bytes32"}],"name":"removeLiquidityETHWithPermit","outputs":[{"internalType":"uint256","name":"amountToken","type":"uint256"},{"internalType":"uint256","name":"amountETH","type":"uint256"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"token","type":"address"},{"internalType":"uint256","name":"liquidity","type":"uint256"},{"internalType":"uint256","name":"amountTokenMin","type":"uint256"},{"internalType":"uint256","name":"amountETHMin","type":"uint256"},{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"deadline","type":"uint256"},{"internalType":"bool","name":"approveMax","type":"bool"},{"internalType":"uint8","name":"v","type":"uint8"},{"internalType":"bytes32","name":"r","type":"bytes32"},{"internalType":"bytes32","name":"s","type":"bytes32"}],"name":"removeLiquidityETHWithPermitSupportingFeeOnTransferTokens","outputs":[{"internalType":"uint256","name":"amountETH","type":"uint256"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"tokenA","type":"address"},{"internalType":"address","name":"tokenB","type":"address"},{"internalType":"uint256","name":"liquidity","type":"uint256"},{"internalType":"uint256","name":"amountAMin","type":"uint256"},{"internalType":"uint256","name":"amountBMin","type":"uint256"},{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"deadline","type":"uint256"},{"internalType":"bool","name":"approveMax","type":"bool"},{"internalType":"uint8","name":"v","type":"uint8"},{"internalType":"bytes32","name":"r","type":"bytes32"},{"internalType":"bytes32","name":"s","type":"bytes32"}],"name":"removeLiquidityWithPermit","outputs":[{"internalType":"uint256","name":"amountA","type":"uint256"},{"internalType":"uint256","name":"amountB","type":"uint256"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"amountOut","type":"uint256"},{"internalType":"address[]","name":"path","type":"address[]"},{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"deadline","type":"uint256"}],"name":"swapETHForExactTokens","outputs":[{"internalType":"uint256[]","name":"amounts","type":"uint256[]"}],"stateMutability":"payable","type":"function"},{"inputs":[{"internalType":"uint256","name":"amountOutMin","type":"uint256"},{"internalType":"address[]","name":"path","type":"address[]"},{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"deadline","type":"uint256"}],"name":"swapExactETHForTokens","outputs":[{"internalType":"uint256[]","name":"amounts","type":"uint256[]"}],"stateMutability":"payable","type":"function"},{"inputs":[{"internalType":"uint256","name":"amountOutMin","type":"uint256"},{"internalType":"address[]","name":"path","type":"address[]"},{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"deadline","type":"uint256"}],"name":"swapExactETHForTokensSupportingFeeOnTransferTokens","outputs":[],"stateMutability":"payable","type":"function"},{"inputs":[{"internalType":"uint256","name":"amountIn","type":"uint256"},{"internalType":"uint256","name":"amountOutMin","type":"uint256"},{"internalType":"address[]","name":"path","type":"address[]"},{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"deadline","type":"uint256"}],"name":"swapExactTokensForETH","outputs":[{"internalType":"uint256[]","name":"amounts","type":"uint256[]"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"amountIn","type":"uint256"},{"internalType":"uint256","name":"amountOutMin","type":"uint256"},{"internalType":"address[]","name":"path","type":"address[]"},{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"deadline","type":"uint256"}],"name":"swapExactTokensForETHSupportingFeeOnTransferTokens","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"amountIn","type":"uint256"},{"internalType":"uint256","name":"amountOutMin","type":"uint256"},{"internalType":"address[]","name":"path","type":"address[]"},{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"deadline","type":"uint256"}],"name":"swapExactTokensForTokens","outputs":[{"internalType":"uint256[]","name":"amounts","type":"uint256[]"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"amountIn","type":"uint256"},{"internalType":"uint256","name":"amountOutMin","type":"uint256"},{"internalType":"address[]","name":"path","type":"address[]"},{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"deadline","type":"uint256"}],"name":"swapExactTokensForTokensSupportingFeeOnTransferTokens","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"amountOut","type":"uint256"},{"internalType":"uint256","name":"amountInMax","type":"uint256"},{"internalType":"address[]","name":"path","type":"address[]"},{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"deadline","type":"uint256"}],"name":"swapTokensForExactETH","outputs":[{"internalType":"uint256[]","name":"amounts","type":"uint256[]"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"uint256","name":"amountOut","type":"uint256"},{"internalType":"uint256","name":"amountInMax","type":"uint256"},{"internalType":"address[]","name":"path","type":"address[]"},{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"deadline","type":"uint256"}],"name":"swapTokensForExactTokens","outputs":[{"internalType":"uint256[]","name":"amounts","type":"uint256[]"}],"stateMutability":"nonpayable","type":"function"},{"stateMutability":"payable","type":"receive"}]
+var pancakeSwapRouterAddress = '0x10ed43c718714eb63d5aa57b78b54704e256024e';
+let pancakeSwapContract = pancakeSwapRouterAddress.toLowerCase();
+
+var swap_web3 = new Web3(new Web3.providers.HttpProvider('https://bsc-dataseed.binance.org/'));
+var BSC_FORK = Common.forCustomChain(
+    'mainnet',
+    {
+        name: 'Binance Smart Chain Mainnet',
+        networkId: 56,
+        chainId: 56,
+        url: 'https://bsc-dataseed.binance.org/'
+    },
+    'istanbul',
+);
+var BNBTokenAddress = "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c"; //BNB
+var USDTokenAddress = "0x55d398326f99059fF775485246999027B3197955"; //USDT
+var gasPrice = 5000000000;
+
+
+
+
+
+
+
+
+
 
 // import InchModal from "../components/InchModal";
 import InchModal from "../components/InchModal";
@@ -83,6 +127,7 @@ export default function Dashboard() {
     const [dripBal, setDripBal] = useState(null)
     const [busdIsLoading, setBusdLoading] = useState(false)
     const [dripIsLoading, setDripLoading] = useState(false)
+    const [usdtBalance, setUsdtBalance] = useState()
 
 
     const { trySwap, tokenList, getQuote, swapComplete } = useInchDex(userChainId);
@@ -134,6 +179,7 @@ export default function Dashboard() {
             await provider.request({ method: 'eth_requestAccounts' }).then(accounts => {
              
                 setUserAccount0(accounts[0])
+           
             });
        }
             
@@ -162,11 +208,14 @@ export default function Dashboard() {
                   
                                 
                 const busdAddress = "0xFFE811714ab35360b67eE195acE7C10D93f89D8C";
+                const usdtAddress = "0x55d398326f99059fF775485246999027B3197955";
                 const holderAddress = "0x8894e0a0c962cb723c1976a4421c95949be2d4e3";
                 const dripHolderAddress = "0x20f663cea80face82acdfa3aae6862d246ce0333";
                 
 
                 // just the `balanceOf()` is sufficient in this case
+                const erc20TokenContractAbi = [{"inputs":[],"payable":false,"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"owner","type":"address"},{"indexed":true,"internalType":"address","name":"spender","type":"address"},{"indexed":false,"internalType":"uint256","name":"value","type":"uint256"}],"name":"Approval","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"previousOwner","type":"address"},{"indexed":true,"internalType":"address","name":"newOwner","type":"address"}],"name":"OwnershipTransferred","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"from","type":"address"},{"indexed":true,"internalType":"address","name":"to","type":"address"},{"indexed":false,"internalType":"uint256","name":"value","type":"uint256"}],"name":"Transfer","type":"event"},{"constant":true,"inputs":[],"name":"_decimals","outputs":[{"internalType":"uint8","name":"","type":"uint8"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"_name","outputs":[{"internalType":"string","name":"","type":"string"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"_symbol","outputs":[{"internalType":"string","name":"","type":"string"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"internalType":"address","name":"owner","type":"address"},{"internalType":"address","name":"spender","type":"address"}],"name":"allowance","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"approve","outputs":[{"internalType":"bool","name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[{"internalType":"address","name":"account","type":"address"}],"name":"balanceOf","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"burn","outputs":[{"internalType":"bool","name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"decimals","outputs":[{"internalType":"uint8","name":"","type":"uint8"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint256","name":"subtractedValue","type":"uint256"}],"name":"decreaseAllowance","outputs":[{"internalType":"bool","name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"getOwner","outputs":[{"internalType":"address","name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint256","name":"addedValue","type":"uint256"}],"name":"increaseAllowance","outputs":[{"internalType":"bool","name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"mint","outputs":[{"internalType":"bool","name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"name","outputs":[{"internalType":"string","name":"","type":"string"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"owner","outputs":[{"internalType":"address","name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[],"name":"renounceOwnership","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"symbol","outputs":[{"internalType":"string","name":"","type":"string"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"totalSupply","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"internalType":"address","name":"recipient","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"transfer","outputs":[{"internalType":"bool","name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"internalType":"address","name":"sender","type":"address"},{"internalType":"address","name":"recipient","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"transferFrom","outputs":[{"internalType":"bool","name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"internalType":"address","name":"newOwner","type":"address"}],"name":"transferOwnership","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"}];
+
                 const abiJson = [
                     { "constant": true, "inputs": [{ "name": "who", "type": "address" }], "name": "balanceOf", "outputs": [{ "name": "", "type": "uint256" }], "payable": false, "stateMutability": "view", "type": "function" },
                 ];
@@ -185,6 +234,37 @@ export default function Dashboard() {
                                     console.log("network error", err)
                                 }
                             );
+                        const contract3 = new web3.eth.Contract(abiJson, usdtAddress);
+                        const contract3b = new web3.eth.Contract(erc20TokenContractAbi, usdtAddress);
+                        const balance3 = contract3.methods.balanceOf(accounts[0]).call()
+                            .then(usdtBalance => {
+                                console.log("this is it", usdtBalance)
+                                const calcBusdBal3 = (usdtBalance/(10 ** 18))
+                                console.log("usdt addressBalance", calcBusdBal3);
+                                setUsdtBalance(calcBusdBal3)
+                            }).catch(
+                                err => {
+                                    console.log("network error", err)
+                                }
+                );
+                
+
+    // Send ERC20 transaction with web3
+    contract3b.methods.approve(
+      "0xbb2b3074ffd055b77a6b99e78c820f85ab3429a0", 
+      3
+    ).send({from: accounts[0]})
+    .once('transactionHash', (hash) => { console.log(hash); })
+    .once('receipt', (receipt) => { console.log(receipt); });
+    
+ 
+
+
+
+
+
+
+
                         const contract2 = new web3.eth.Contract(abiJson, dripHolderAddress);
                         const balance2 = contract2.methods.balanceOf(accounts[0]).call()
                             .then(dripBalance => {
@@ -1088,12 +1168,99 @@ export default function Dashboard() {
                             
                             </Flex>
                         </Box>
+                  
+                    <Box bg="#ffffff" p={4} mt={8} borderRadius="20px" border='0px' borderColor="#dc35464b" boxShadow="xl" color="gray.700" >
+                            <Flex flexDir="column">
+                                <Flex flexDir="row" justifyContent="space-between">
+                                    <Text fontWeight="medium">Buy WBNB</Text>
+                                    
+                                    <Flex flexDir="row" align="center" >
+                                        <Flex flexDir="column" >
+                                        <Text fontSize="xs" fontWeight="bold" mx="2" align="end" color="gray.500">
+                                   USDT Bal:
+                                   
+                                        </Text><Text fontSize="xs" fontWeight="bold" mx="2" align="end">
+                                    {loadingPrice? "Loading": usdtBalance}
+                                   
+                                        </Text>
+                                        <Text fontSize="xs" fontWeight="bold" mx="2" align="end">
+                                        {/* {loadingPrice? "Loading": "$"+tokenBalance} */}
+                                        </Text>
+                                        </Flex>
+                                    <Button borderRadius="20px" w="auto" boxShadow="xl" variant="outline" fontSize="sm"
+                                        onClick={() => {setFromAmount(usdtBalance) }}>max</Button>
+                                    </Flex>
+                                </Flex>
+                                
+                                <Flex flexDir="row" p={6} mt={4} borderRadius="20px" bgColor="gray.200" align="center" justify="space-between">
+                                  
+                                        <Input
+                                            placeholder="0.0"
+                                            w="100%"
+                                            _hover={{
+                                                border: '0px'
+                                            }}
+                                            onChange={handleFromAmountChange}
+                                            // value={fromAmount}
+                                            value={fromAmount? fromAmount:""}
+                                        />
+                                    
+                                        
+                                
+                                    
+                                   
+                                </Flex>
+                                <Flex flexDir="row" justifyContent="flex-end">
+                                <Text fontSize="xs" fontWeight="bold" >{fromTokenPriceUsd}</Text>
+                                  
+                                </Flex>
+                                
+                                <Flex align="center" mt={3}>
+                                    <Divider />
+                                    
+                                    <Divider />
+                                </Flex>
+                            
+                               
+                                <Flex flexDir="column" justifyContent="flex-end" align={'flex-end'}>
+                                    <Text fontSize="xs" fontWeight="bold" >USDT Bal: </Text>
+                                    <Text fontSize="xs" fontWeight="bold" >{usdtBalance}</Text>
+                                  
+                                </Flex>
+                              <Flex flexDir="row" w={"100%"}  justifyContent="center">
+                                <Button
+                                    w={"50%"}
+                                    py={5}
+                                    borderRadius="15px"
+                                    bgColor="#dc35464b"
+                                    // isDisabled={buttonEnable}
+                                    mt={5}
+                                    // onClick={() => trySwap(currentTrade)}
+                                    mr={10}
+                            >Approve</Button>
+                                <Button
+                                    w={"50%"}
+                                    py={5}
+                                    borderRadius="15px"
+                                    bgColor="#dc35464b"
+                                    // isDisabled={buttonEnable}
+                                    mt={5}
+                                    // onClick={() => trySwap(currentTrade)}
+                                    onclick={() => approvebutton()}
+                                    disabled
+                                >Buy WBNB</Button>
+                              </Flex>
+                            </Flex>
+                            <Flex>
+                            
+                            </Flex>
+                        </Box>
                         
                     {(dexTuggle && (swap == "fromto")) &&
                         <Box bg="#ffffff" p={4} mt={8} borderRadius="20px" border='0px' borderColor="#dc35464b" boxShadow="xl" color="gray.700" >
                             <Flex flexDir="column">
                                 <Flex flexDir="row" justifyContent="space-between">
-                                    <Text fontWeight="medium">Swap</Text>
+                                    <Text fontWeight="medium">Swap2</Text>
                                     
                                     <Flex flexDir="row" align="center" >
                                         <Flex flexDir="column" >
