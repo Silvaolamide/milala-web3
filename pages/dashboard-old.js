@@ -31,7 +31,7 @@ import {
     SkeletonCircle,
     SkeletonText, 
 } from '@chakra-ui/react'
-import React, { useEffect, useMemo, useState, useRef } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import {
     FiHome,
     FiPieChart,
@@ -177,11 +177,6 @@ export default function Dashboard() {
     const [enableBuyButton, setEnableBuyButton] = useState(false)
     const [enableSellButton, setEnableSellButton] = useState(false)
 
-
-
-
-    const [bscScanData, setBscScanData] = useState(null)
-
     let chainId
     let web3
    
@@ -195,7 +190,7 @@ export default function Dashboard() {
     // console.log("tokenListt", fromToken)
     // console.log("Jehhhh5", empValue)
 
-    useEffect(async () => {
+    useEffect( async () => {
         let provider = window.ethereum;
         web3 = new Web3(provider);
         if (typeof provider !== 'undefined') {
@@ -216,29 +211,6 @@ export default function Dashboard() {
         return m ? parseFloat(m[1]) : this.valueOf();
     };
 
-    function truncateString(str, num) {
-        // If the length of str is less than or equal to num
-        // just return str--don't truncate it.
-        if (str.length <= num) {
-          return str
-        }
-        // Return str truncated with '...' concatenated to the end of str.
-        return str.slice(0, num) + '...'
-    }
-    
-
-    function convertTime(UNIX_timestamp){
-        var a = new Date(UNIX_timestamp * 1000);
-        var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-        var year = a.getFullYear();
-        var month = months[a.getMonth()];
-        var date = a.getDate();
-        var hour = a.getHours();
-        var min = a.getMinutes();
-        var sec = a.getSeconds();
-        var time = date + ' ' + month + ' ' + year + ' ' + hour + ':' + min + ':' + sec ;
-        return time;
-      }
     async function test() {
 
         
@@ -612,11 +584,11 @@ export default function Dashboard() {
     
     
     
-    useEffect(async () => {
+    useEffect(() => {
         
         
 
-        let provider =  window.ethereum;
+        let provider = window.ethereum;
         if (typeof provider !== 'undefined') {
             provider.request({ method: 'eth_requestAccounts' }).then(accounts => {
              
@@ -631,11 +603,7 @@ export default function Dashboard() {
                 
                 // Maybe I should make this repeat every 15 secs
                 // const interval = setInterval(() => {
-                
-                
-
-
-                
+                        
                   
                                 
                 // const dripFaucet = "0xFFE811714ab35360b67eE195acE7C10D93f89D8C";
@@ -731,8 +699,7 @@ export default function Dashboard() {
                     // }, 10000);
                     // return () => clearInterval(interval); 
                 
-                    
-                               
+                          
                   
 
                     
@@ -757,7 +724,7 @@ export default function Dashboard() {
         window.ethereum.on('chainChanged', chainChangedHandler)
 
 
-       
+        
         
         // //tried to get bnb current price from pancakeswap api
         // const web3 = new Web3
@@ -821,13 +788,13 @@ export default function Dashboard() {
             });
 
         
-           
+        
         setChrtState({ loading: true });
         const interval = setInterval(() => {
             const apiUrl = `https://api.drip.community/prices`;
             axios
                 .get(apiUrl)
-                .then((res) => {    
+                .then((res) => {
                     
                     // res.data.map(time_res => {
                     
@@ -878,32 +845,6 @@ export default function Dashboard() {
     
   
 
-
-    useEffect(async() => {
-        const dAddress = await defaultAccount
-        const apiUrlBscscan = `https://api.bscscan.com/api?module=account&action=txlist&address=${dAddress}&startblock=0&endblock=99999999&page=1&offset=10&sort=asc&apikey=IJ87MMJXADZ4EKN66MTEEEM3KISP6247DA`;
-        await axios
-            .get(apiUrlBscscan)
-            .then((res2) => {
-            
-                // res.data.map(time_res => {
-            
-                
-                //         // empTime.push(timeConverter(time_res["time"]))
-                //         empValue.push(time_res["value"])
-                
-                //         setChrtState({ loading: false });
-                // } )
-                setBscScanData(res2.data.result)
-                console.log("BscScan", apiUrlBscscan,defaultAccount, bscScanData)
-            
-            }).catch(
-                err => {
-                    console.log("network error", err)
-                }
-            );
-    }, [defaultAccount, bscScanData]);
-    
 
     useEffect(async () => {
         
@@ -1496,7 +1437,7 @@ console.log("amountOutMin2b", amountOutMin2b)
                     <MyChart />
                     <Flex justifyContent="space-between" mt={8}>
                         <Flex align="flex-end">
-                            <Heading as="h2" size="lg" letterSpacing="Tight">Recent Transactions</Heading>
+                            <Heading as="h2" size="lg" letterSpacing="Tight">Token Balances</Heading>
                             <Text fontSize="sm" color="gray" ml={4}>Apr 2021</Text>
                         </Flex>
                         <IconButton icon={<FiCalendar />} />
@@ -1507,56 +1448,57 @@ console.log("amountOutMin2b", amountOutMin2b)
                                 <Table variant="unstyled" mt={4}>
                                     <Thead>
                                         <Tr color="gray">
-                                            <Th >Token</Th>
-                                            <Th> From</Th>
+                                            <Th>Token</Th>
+                                            <Th> Balance</Th>
                                           
-                                            <Th maxWidth={20}> To</Th>
+                                            <Th isNumeric> Decimals</Th>
                                         </Tr>
                                 </Thead>
                                 <Tbody>
-                                    {/* {bscScanData?.map((trans) => {
-                                        
-                                        ( */}
-                                            <Tr>
-                                                <Td >
-                                                    <Flex align="center"  >
-                                                        <Avatar size="sm" mr={2} src="avatar-1.jpg" />
-                                                        <Flex flexDir="column">
-                                                            <Heading size="sm" letterSpacing="tight">Hash</Heading>
-                                                            {/* <Text fontSize="sm" color="gray" ><Link color='teal.500' href={"https://bscscan.com/tx/" + trans.hash}>{truncateString(trans.hash, 12)}</Link></Text> */}
-                                                        </Flex>
-                                                    </Flex>
-                                                </Td>
-                                                {/* <Td maxWidth={'40'}> <Link color='teal.500' href={"https://bscscan.com/tx/" + trans.hash}>{trans.from}</Link></Td> */}
-                                                {/* <Td maxWidth={'40'}> <Link color='teal.500' href={"https://bscscan.com/tx/" + trans.hash}>{trans.to}</Link></Td> */}
-                                                {/* <Td > <Link color='teal.500' href={"https://bscscan.com/tx/" + trans.hash}>{convertTime(trans.timeStamp)}</Link></Td> */}
-                                            </Tr>
-                                    {/* )}
-                                        )
-                                    } */}
-                                  
-                               
-                                      
+                                   
                                     
                                     {display === 'show' && 
                                         <>
-                                        {/* {bscScanData?.map((trans) => ( */}
-                                    <Tr>
-                                        <Td >
-                                            <Flex align="center"  width={30} overflow='hidden' style={{ }}>
-                                                <Avatar size="sm" mr={2} src="avatar-1.jpg" />
-                                                <Flex flexDir="column">
-                                                    <Heading size="sm" letterSpacing="tight">Amazon5</Heading>
-                                                    {/* <Text fontSize="sm" color="gray" >{trans.blockHash}</Text> */}
+                                            <Tr>
+                                            <Td>
+                                                <Flex align="center">
+                                                    <Avatar size="sm" mr={2} src="avatar-1.jpg" />
+                                                    <Flex flexDir="column">
+                                                        <Heading size="sm" letterSpacing="tight">Amazon</Heading>
+                                                        <Text fontSize="sm" color="gray">Apr 24, 2021 at 1:40pm</Text>
+                                                    </Flex>
                                                 </Flex>
-                                            </Flex>
-                                        </Td>
-                                        <Td>  Electronic Devices </Td>
-                                        <Td isNumeric> +2$</Td>
-                                        <Td isNumeric> <Text fontWeight="bold" display="inline-table">-$242</Text>.00</Td>
-                                    </Tr>
-                           {/* ))} */}
-                               
+                                            </Td>
+                                                <Td>  Electronic Devices </Td>
+                                                <Td isNumeric> +2$</Td>
+                                                <Td isNumeric> <Text fontWeight="bold" display="inline-table">-$242</Text>.00</Td>
+                                            </Tr><Tr>
+                                            <Td>
+                                                <Flex align="center">
+                                                    <Avatar size="sm" mr={2} src="avatar-1.jpg" />
+                                                    <Flex flexDir="column">
+                                                        <Heading size="sm" letterSpacing="tight">Amazon</Heading>
+                                                        <Text fontSize="sm" color="gray">Apr 24, 2021 at 1:40pm</Text>
+                                                    </Flex>
+                                                </Flex>
+                                            </Td>
+                                                <Td>  Electronic Devices </Td>
+                                                <Td isNumeric> +2$</Td>
+                                                <Td isNumeric> <Text fontWeight="bold" display="inline-table">-$242</Text>.00</Td>
+                                            </Tr><Tr>
+                                            <Td>
+                                                <Flex align="center">
+                                                    <Avatar size="sm" mr={2} src="avatar-1.jpg" />
+                                                    <Flex flexDir="column">
+                                                        <Heading size="sm" letterSpacing="tight">Amazon</Heading>
+                                                        <Text fontSize="sm" color="gray">Apr 24, 2021 at 1:40pm</Text>
+                                                    </Flex>
+                                                </Flex>
+                                            </Td>
+                                                <Td>  Electronic Devices </Td>
+                                                <Td isNumeric> +2$</Td>
+                                                <Td isNumeric> <Text fontWeight="bold" display="inline-table">-$242</Text>.00</Td>
+                                        </Tr>
                                         </>
                                     }
                                     </Tbody>
@@ -1850,7 +1792,7 @@ console.log("amountOutMin2b", amountOutMin2b)
                                     <Flex flexDir="row" align="center" >
                                         <Flex flexDir="column" >
                                         <Text fontSize="xs" fontWeight="bold" mx="2" align="end" color="gray.500">
-                                   BUSD Bal:
+                                   USDT Bal:
                                    
                                         </Text><Text fontSize="xs" fontWeight="bold" mx="2" align="end">
                                     {loadingUsdtPrice? "Loading": busdBal}
@@ -1959,7 +1901,144 @@ console.log("amountOutMin2b", amountOutMin2b)
                             </Skeleton>
                     </Box>
                     
-                        
+                        <Box bg="#ffffff" p={4} mt={8} borderRadius="20px" border='0px' borderColor="#dc35464b" boxShadow="xl" color="gray.700" >
+                            <Flex flexDir="column">
+                                <Flex flexDir="row" justifyContent="space-between">
+                                    <Text fontWeight="medium">Swap</Text>
+                                    
+                                    <Flex flexDir="row" align="center" >
+                                        <Flex flexDir="column" >
+                                        <Text fontSize="xs" fontWeight="bold" mx="2" align="end">
+                                    {loadingPrice? "Loading": walletTokenBalance}
+                                   
+                                        </Text>
+                                        <Text fontSize="xs" fontWeight="bold" mx="2" align="end">
+                                        {/* {loadingPrice? "Loading": "$"+tokenBalance} */}
+                                        </Text>
+                                        </Flex>
+                                    <Button borderRadius="20px" w="auto" boxShadow="xl" variant="outline" fontSize="sm"
+                                        onClick={() => {setFromAmount(walletTokenBalance) }}>max</Button>
+                                    </Flex>
+                                </Flex>
+                                
+                                <Flex flexDir="row" p={6} mt={4} borderRadius="20px" bgColor="gray.200" align="center" justify="space-between">
+                                  
+                                        <Input
+                                            placeholder="0.0"
+                                            w="50%"
+                                            _hover={{
+                                                border: '0px'
+                                            }}
+                                            onChange={handleFromAmountChange}
+                                            // value={fromAmount}
+                                            value={fromAmount? fromAmount:""}
+                                        />
+                                    
+                                        
+                                    <Button borderRadius="20px" w="auto" boxShadow="xl" fontSize="sm" onClick={() => setFromModalActive(true)}>
+                                            {/* <Icon as={FiDroplet} mx={3} /> */}
+                                            {fromToken ? (
+                <img
+                  src={fromToken?.logoURI || "https://etherscan.io/images/main/empty-token.png"}
+                  alt="nologo"
+                  width="30px"
+                  preview={false}
+                                                style={{ borderRadius: "15px", paddingRight:"5px" }}
+                />
+              ) : (
+                <span>Select a token</span>
+              )}
+                                            <span pl="5px"> {fromToken?.symbol}</span>
+                                            <Icon as={FiChevronDown} mx={3} />
+                                    
+                                            </Button>
+                                    
+                                   
+                                </Flex>
+                                <Flex flexDir="row" justifyContent="flex-end">
+                                <Text fontSize="xs" fontWeight="bold" >{fromTokenPriceUsd}</Text>
+                                  
+                                </Flex>
+                                
+                                <Flex align="center" mt={3}>
+                                    <Divider />
+                                    <IconButton
+                                        icon={<><FiChevronUp /> <FiChevronDown /></>}
+                                        onClick={() => {
+                                            if (swap == 'fromto') {
+                                                swapChange('tofrom')
+                                            } else {
+                                                swapChange('fromto')
+                                            }
+                                        }
+
+                                        } />
+                                
+                                    {/* <IconButton
+                                    icon={display === 'show' ? <FiChevronUp /> : <FiChevronDown />}
+                                    onClick={() => {
+                                        if (display == 'show') {
+                                            changeDisplay('none')
+                                        } else {
+                                            changeDisplay('show')
+                                        }
+                                    }
+
+                                    } /> */}
+                                    <Divider />
+                                </Flex>
+                            
+                                <Flex flexDir="row" p={6} mt={3} borderRadius="20px" bgColor="gray.200" align="center"  justify="space-between">
+                                    <Input
+                                        placeholder="0.0"
+                                        w="50%"
+                                        _hover={{
+                                            border: '0px'
+                                        }}
+                                        // value={quote ? Moralis.Units.FromWei(quote?.toTokenAmount, quote?.toToken?.decimals).toFixed(6) : ""}
+                                        value={quote ? quote.toTokenPrice : ""}
+                                    
+
+                                    />
+                                
+        <Button borderRadius="20px" boxShadow="xl" w="auto" fontSize="sm" onClick={() => setToModalActive(true)}>
+        {toToken ? (
+                <img
+                  src={toToken?.logoURI || "https://etherscan.io/images/main/empty-token.png"}
+                  alt="nologo"
+                  width="30px"
+                  preview={false}
+                                                style={{ borderRadius: "15px", paddingRight:"5px" }}
+                />
+              ) : (
+                <span>Select a token</span>
+              )}
+                                    <span> {toToken?.symbol}</span>
+            <Icon as={FiChevronDown} mx={2} />
+            
+        </Button>
+                                    
+                                
+                                </Flex>
+                                <Flex flexDir="row" justifyContent="flex-end">
+                                    <Text fontSize="xs" fontWeight="bold" >toTokenPriceUsd</Text>
+                                  
+                                </Flex>
+                              
+                                <Button
+                                    py={5}
+                                    borderRadius="15px"
+                                    bgColor="#dc35464b"
+                                    // isDisabled={buttonEnable}
+                                    mt={5}
+                                    // onClick={() => trySwap(currentTrade)}
+                                >Swap</Button>
+                              
+                            </Flex>
+                            <Flex>
+                            
+                            </Flex>
+                        </Box>
                     {(dexTuggle && (swap == "fromto")) &&
                         <Box bg="#ffffff" p={4} mt={8} borderRadius="20px" border='0px' borderColor="#dc35464b" boxShadow="xl" color="gray.700" >
                             <Flex flexDir="column">
@@ -2185,7 +2264,34 @@ console.log("amountOutMin2b", amountOutMin2b)
                     }
                    
                    
-                    
+                    <Heading size="sm" letterSpacing="tight" my={4} mt={8}>Send money to</Heading>
+                    <Flex>
+                        <AvatarGroup size="md" max={3}>
+                            <Avatar src="avatar-1.jpg"/>
+                            <Avatar src="avatar-1.jpg"/>
+                            <Avatar src="avatar-1.jpg"/>
+                            <Avatar src="avatar-1.jpg"/>
+                            <Avatar src="avatar-1.jpg"/>
+                            <Avatar icon={<FiPlus />} ml="2" color="fff" bgColor="gray.300" />
+                        </AvatarGroup>
+                    </Flex>
+                    <Text color="gray" mt={10} mb={2}>Card Number</Text>
+                    <InputGroup>
+                        <InputLeftElement pointerEvents="none"> 
+                            
+                            <FiCreditCard color="gray.700"/>
+                        </InputLeftElement> 
+                        <Input type="number" placeholder="**** **** **** ****"/>
+                    </InputGroup>
+                    <Text color="gray" mt={2} mb={2}>Sum</Text>
+                    <InputGroup>
+                        <InputLeftElement pointerEvents="none"> 
+                           
+                             <FiCreditCard color="gray.700"/>
+                        </InputLeftElement> 
+                        <Input type="number" placeholder="1300.00"/>
+                    </InputGroup>
+                    <Button mt={4} bgColor="blackAlpha.900" color="#fff" p={7} borderRadius="15">Send Money</Button>
                 </Flex>
                         
           
@@ -2331,24 +2437,21 @@ console.log("amountOutMin2b", amountOutMin2b)
                                         <Th isNumeric> Amount</Th>
                                     </Tr>
                                 </Thead>
-                            <Tbody>
-                                {/* {bscScanData?.map((trans) => ( */}
+                                <Tbody>
                                     <Tr>
-                                        <Td >
-                                            <Flex align="center" >
+                                        <Td>
+                                            <Flex align="center">
                                                 <Avatar size="sm" mr={2} src="avatar-1.jpg" />
-                                                <Flex flexDir="column" >
-                                                    <Heading size="sm" letterSpacing="tight">Amazon3</Heading>
-                                                    {/* <Text fontSize="sm" color="gray" noOfLines={1}>{trans.blockhash}</Text> */}
+                                                <Flex flexDir="column">
+                                                    <Heading size="sm" letterSpacing="tight">Amazon</Heading>
+                                                    <Text fontSize="sm" color="gray">Apr 24, 2021 at 1:40pm</Text>
                                                 </Flex>
                                             </Flex>
                                         </Td>
                                         <Td>  Electronic Devices </Td>
                                         <Td isNumeric> +2$</Td>
                                         <Td isNumeric> <Text fontWeight="bold" display="inline-table">-$242</Text>.00</Td>
-                                    </Tr>
-                           {/* ))} */}
-                                <Tr>
+                                    </Tr><Tr>
                                         <Td>
                                             <Flex align="center">
                                                 <Avatar size="sm" mr={2} src="avatar-1.jpg" />
@@ -2377,23 +2480,46 @@ console.log("amountOutMin2b", amountOutMin2b)
                                     </Tr>
                                     {display === 'show' &&
                                         <>
-                                        {/* {bscScanData?.map((trans) => ( */}
-                                    <Tr>
-                                        <Td>
-                                            <Flex align="center">
-                                                <Avatar size="sm" mr={2} src="avatar-1.jpg" />
-                                                <Flex flexDir="column">
-                                                    <Heading size="sm" letterSpacing="tight">Amazon2</Heading>
-                                                    {/* <Text fontSize="sm" color="gray">{trans.blockhash}</Text> */}
-                                                </Flex>
-                                            </Flex>
-                                        </Td>
-                                        <Td>  Electronic Devices </Td>
-                                        <Td isNumeric> +2$</Td>
-                                        <Td isNumeric> <Text fontWeight="bold" display="inline-table">-$242</Text>.00</Td>
-                                    </Tr>
-                           {/* ))} */}
-                               
+                                            <Tr>
+                                                <Td>
+                                                    <Flex align="center">
+                                                        <Avatar size="sm" mr={2} src="avatar-1.jpg" />
+                                                        <Flex flexDir="column">
+                                                            <Heading size="sm" letterSpacing="tight">Amazon</Heading>
+                                                            <Text fontSize="sm" color="gray">Apr 24, 2021 at 1:40pm</Text>
+                                                        </Flex>
+                                                    </Flex>
+                                                </Td>
+                                                <Td>  Electronic Devices </Td>
+                                                <Td isNumeric> +2$</Td>
+                                                <Td isNumeric> <Text fontWeight="bold" display="inline-table">-$242</Text>.00</Td>
+                                            </Tr><Tr>
+                                                <Td>
+                                                    <Flex align="center">
+                                                        <Avatar size="sm" mr={2} src="avatar-1.jpg" />
+                                                        <Flex flexDir="column">
+                                                            <Heading size="sm" letterSpacing="tight">Amazon</Heading>
+                                                            <Text fontSize="sm" color="gray">Apr 24, 2021 at 1:40pm</Text>
+                                                        </Flex>
+                                                    </Flex>
+                                                </Td>
+                                                <Td>  Electronic Devices </Td>
+                                                <Td isNumeric> +2$</Td>
+                                                <Td isNumeric> <Text fontWeight="bold" display="inline-table">-$242</Text>.00</Td>
+                                            </Tr><Tr>
+                                                <Td>
+                                                    <Flex align="center">
+                                                        <Avatar size="sm" mr={2} src="avatar-1.jpg" />
+                                                        <Flex flexDir="column">
+                                                            <Heading size="sm" letterSpacing="tight">Amazon</Heading>
+                                                            <Text fontSize="sm" color="gray">Apr 24, 2021 at 1:40pm</Text>
+                                                        </Flex>
+                                                    </Flex>
+                                                </Td>
+                                                <Td>  Electronic Devices </Td>
+                                                <Td isNumeric> +2$</Td>
+                                                <Td isNumeric> <Text fontWeight="bold" display="inline-table">-$242</Text>.00</Td>
+                                            </Tr>
                                         </>
                                     }
                                 </Tbody>
